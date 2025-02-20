@@ -5,14 +5,26 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="stylesheet" href="styles.css" />
-		<title>영어 질문 게시판</title>
+		<title>Q&A Board</title>
+		<style>
+			/* 스타일 추가 */
+			.question {
+				margin-bottom: 20px;
+				border: 1px solid #ccc;
+				padding: 10px;
+			}
+			.answers {
+				margin-top: 10px;
+				padding-left: 20px;
+			}
+		</style>
 	</head>
 	<body>
 		<div class="container">
-			<h1>영어 질문 게시판</h1>
+			<h1>Q&A Board</h1>
 			<form id="questionForm">
-				<input type="text" id="questionInput" placeholder="영어 관련 질문을 입력하세요" required />
-				<button type="submit">질문 올리기</button>
+				<input type="text" id="questionInput" placeholder="질문을 입력하세요" required />
+				<button type="submit">질문하기</button>
 			</form>
 			<div id="questionList"></div>
 		</div>
