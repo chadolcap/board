@@ -101,7 +101,7 @@ function displayAnswer(questionId, text) {
 		answerDiv.textContent = text; // 답변 텍스트 추가
 		answersDiv.appendChild(answerDiv); // 답변 리스트에 답변 추가
 	} else {
-		console.error('해당 ID의 질문을 찾을 수 없습니다:', questionId); // 한글로 수정된 에러 메시지
+		console.error('해당 ID의 질문을 찾을 수 없습니다:', questionId);
 	}
 }
 
