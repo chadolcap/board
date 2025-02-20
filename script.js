@@ -1,7 +1,5 @@
 /** @format */
 
-// 영어 질문 게시판 기능 구현
-
 // Firebase SDK 추가
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
 import {getFirestore, collection, addDoc, getDocs, updateDoc, arrayUnion, doc} from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
@@ -20,6 +18,8 @@ const firebaseConfig = {
 // Firebase 초기화
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+
+// 영어 질문 게시판 기능 구현
 
 // DOM 요소 선택
 const questionForm = document.getElementById('questionForm');
