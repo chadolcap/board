@@ -2,7 +2,7 @@
 
 // Firebase SDK 추가
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-import {getFirestore, collection, addDoc, getDocs, updateDoc, arrayUnion, doc} from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import {getFirestore, collection, addDoc, getDocs, updateDoc, arrayUnion, doc, deleteDoc} from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
 // Firebase 설정 객체
 const firebaseConfig = {
@@ -45,18 +45,24 @@ async function addQuestion(text) {
 }
 
 // 질문 표시 함수
-function displayQuestion({id, text}) {
+function displayQuestion({id, text, answers = []}) {
 	const questionDiv = document.createElement('div'); // 질문 div 생성
 	questionDiv.classList.add('question'); // 클래스 추가
 	questionDiv.dataset.id = id; // 질문 ID를 data-id 속성에 저장
 	questionDiv.innerHTML = `
         <p>${text}</p>
+        <button class="delete-button">삭제</button>
         <form class="answerForm">
             <input type="text" placeholder="답변을 입력하세요" required>
             <button type="submit">답변하기</button>
         </form>
         <div class="answers"></div>
     `; // 질문 내용 및 답변 폼 추가
+
+	// 삭제 버튼 이벤트 리스너
+	questionDiv.querySelector('.delete-button').addEventListener('click', async function () {
+		await deleteQuestion(id); // 질문 삭제 함수 호출
+	});
 
 	// 답변 제출 이벤트 리스너
 	questionDiv.querySelector('.answerForm').addEventListener('submit', async function (event) {
@@ -65,6 +71,11 @@ function displayQuestion({id, text}) {
 		const answerText = answerInput.value; // 입력된 답변 텍스트
 		await addAnswer(id, answerText); // 답변 추가 함수 호출
 		answerInput.value = ''; // 입력 필드 초기화
+	});
+
+	// 기존 답변 표시
+	answers.forEach(answer => {
+		displayAnswer(id, answer); // 기존 답변 표시
 	});
 
 	questionList.appendChild(questionDiv); // 질문 리스트에 질문 추가
@@ -94,11 +105,21 @@ function displayAnswer(questionId, text) {
 	}
 }
 
+// 질문 삭제 함수
+async function deleteQuestion(questionId) {
+	const questionRef = doc(db, 'questions', questionId);
+	await deleteDoc(questionRef); // Firestore에서 질문 삭제
+	const questionDiv = [...questionList.children].find(div => div.dataset.id === questionId);
+	if (questionDiv) {
+		questionList.removeChild(questionDiv); // DOM에서 질문 삭제
+	}
+}
+
 // Firestore에서 질문 불러오기
 async function loadQuestions() {
 	const snapshot = await getDocs(collection(db, 'questions'));
 	snapshot.forEach(doc => {
-		displayQuestion({id: doc.id, text: doc.data().text});
+		displayQuestion({id: doc.id, text: doc.data().text, answers: doc.data().answers || []});
 	});
 }
 
