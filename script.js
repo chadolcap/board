@@ -94,9 +94,9 @@ async function addAnswer(questionId, text) {
 
 // 답변 표시 함수
 function displayAnswer(questionId, text) {
-	console.log('displayAnswer > ', div);
 	console.log('displayAnswer > > ', questionId, text);
 	const questionDiv = [...questionList.children].find(div => div.dataset.id === questionId); // data-id로 질문 찾기
+	console.log('displayAnswer > > ', questionDiv);
 	if (questionDiv) {
 		const answersDiv = questionDiv.querySelector('.answers'); // 답변 리스트 선택
 		const answerDiv = document.createElement('div'); // 답변 div 생성
