@@ -2,12 +2,11 @@
 
 // 영어 질문 게시판 기능 구현
 
-// DOM 요소 선택
-const questionForm = document.getElementById('questionForm');
-const questionInput = document.getElementById('questionInput');
-const questionList = document.getElementById('questionList');
+// Firebase SDK 추가
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+import {getFirestore, collection, addDoc, getDocs, updateDoc, arrayUnion, doc} from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 
-// Firebase 초기화
+// Firebase 설정 객체
 const firebaseConfig = {
 	apiKey: 'AIzaSyAx-fA2fUlm06zyS3yMgl89_rAm7tssvUs',
 	authDomain: 'qna-board-d3c80.firebaseapp.com',
@@ -17,8 +16,15 @@ const firebaseConfig = {
 	appId: '1:76118308944:web:8652f66fae8e3b77407955',
 	measurementId: 'G-70Z3P2YP8Y'
 };
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+
+// Firebase 초기화
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// DOM 요소 선택
+const questionForm = document.getElementById('questionForm');
+const questionInput = document.getElementById('questionInput');
+const questionList = document.getElementById('questionList');
 
 // 질문 제출 이벤트 리스너
 questionForm.addEventListener('submit', async function (event) {
@@ -30,7 +36,7 @@ questionForm.addEventListener('submit', async function (event) {
 
 // 질문 추가 함수
 async function addQuestion(text) {
-	const questionRef = await db.collection('questions').add({
+	const questionRef = await addDoc(collection(db, 'questions'), {
 		text: text,
 		answers: []
 	}); // Firestore에 질문 추가
@@ -65,9 +71,9 @@ function displayQuestion({id, text}) {
 
 // 답변 추가 함수
 async function addAnswer(questionId, text) {
-	const questionRef = db.collection('questions').doc(questionId);
-	await questionRef.update({
-		answers: firebase.firestore.FieldValue.arrayUnion(text) // Firestore에 답변 추가
+	const questionRef = doc(db, 'questions', questionId);
+	await updateDoc(questionRef, {
+		answers: arrayUnion(text) // Firestore에 답변 추가
 	});
 
 	displayAnswer(questionId, text); // 답변 표시
@@ -85,7 +91,7 @@ function displayAnswer(questionId, text) {
 
 // Firestore에서 질문 불러오기
 async function loadQuestions() {
-	const snapshot = await db.collection('questions').get();
+	const snapshot = await getDocs(collection(db, 'questions'));
 	snapshot.forEach(doc => {
 		displayQuestion({id: doc.id, text: doc.data().text});
 	});
