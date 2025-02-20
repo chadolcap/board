@@ -1,22 +1,45 @@
 /** @format */
 
-// 질문 게시판 기능 구현
+// 영어 질문 게시판 기능 구현
 
 // DOM 요소 선택
 const questionForm = document.getElementById('questionForm');
 const questionInput = document.getElementById('questionInput');
 const questionList = document.getElementById('questionList');
 
+// Firebase 초기화
+const firebaseConfig = {
+	apiKey: 'AIzaSyAx-fA2fUlm06zyS3yMgl89_rAm7tssvUs',
+	authDomain: 'qna-board-d3c80.firebaseapp.com',
+	projectId: 'qna-board-d3c80',
+	storageBucket: 'qna-board-d3c80.firebasestorage.app',
+	messagingSenderId: '76118308944',
+	appId: '1:76118308944:web:8652f66fae8e3b77407955',
+	measurementId: 'G-70Z3P2YP8Y'
+};
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // 질문 제출 이벤트 리스너
-questionForm.addEventListener('submit', function (event) {
+questionForm.addEventListener('submit', async function (event) {
 	event.preventDefault(); // 기본 제출 동작 방지
 	const questionText = questionInput.value; // 입력된 질문 텍스트
-	addQuestion(questionText); // 질문 추가 함수 호출
+	await addQuestion(questionText); // 질문 추가 함수 호출
 	questionInput.value = ''; // 입력 필드 초기화
 });
 
 // 질문 추가 함수
-function addQuestion(text) {
+async function addQuestion(text) {
+	const questionRef = await db.collection('questions').add({
+		text: text,
+		answers: []
+	}); // Firestore에 질문 추가
+
+	displayQuestion({id: questionRef.id, text: text}); // 질문 표시
+}
+
+// 질문 표시 함수
+function displayQuestion({id, text}) {
 	const questionDiv = document.createElement('div'); // 질문 div 생성
 	questionDiv.classList.add('question'); // 클래스 추가
 	questionDiv.innerHTML = `
@@ -29,11 +52,11 @@ function addQuestion(text) {
     `; // 질문 내용 및 답변 폼 추가
 
 	// 답변 제출 이벤트 리스너
-	questionDiv.querySelector('.answerForm').addEventListener('submit', function (event) {
+	questionDiv.querySelector('.answerForm').addEventListener('submit', async function (event) {
 		event.preventDefault(); // 기본 제출 동작 방지
 		const answerInput = event.target.querySelector('input'); // 답변 입력 필드
 		const answerText = answerInput.value; // 입력된 답변 텍스트
-		addAnswer(questionDiv.querySelector('.answers'), answerText); // 답변 추가 함수 호출
+		await addAnswer(id, answerText); // 답변 추가 함수 호출
 		answerInput.value = ''; // 입력 필드 초기화
 	});
 
@@ -41,9 +64,32 @@ function addQuestion(text) {
 }
 
 // 답변 추가 함수
-function addAnswer(answersDiv, text) {
+async function addAnswer(questionId, text) {
+	const questionRef = db.collection('questions').doc(questionId);
+	await questionRef.update({
+		answers: firebase.firestore.FieldValue.arrayUnion(text) // Firestore에 답변 추가
+	});
+
+	displayAnswer(questionId, text); // 답변 표시
+}
+
+// 답변 표시 함수
+function displayAnswer(questionId, text) {
+	const questionDiv = [...questionList.children].find(div => div.querySelector('p').textContent === text);
+	const answersDiv = questionDiv.querySelector('.answers'); // 답변 리스트 선택
 	const answerDiv = document.createElement('div'); // 답변 div 생성
 	answerDiv.classList.add('answer'); // 클래스 추가
 	answerDiv.textContent = text; // 답변 텍스트 추가
 	answersDiv.appendChild(answerDiv); // 답변 리스트에 답변 추가
 }
+
+// Firestore에서 질문 불러오기
+async function loadQuestions() {
+	const snapshot = await db.collection('questions').get();
+	snapshot.forEach(doc => {
+		displayQuestion({id: doc.id, text: doc.data().text});
+	});
+}
+
+// 페이지 로드 시 질문 불러오기
+loadQuestions();
