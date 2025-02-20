@@ -41,6 +41,7 @@ async function addQuestion(text) {
 		answers: []
 	}); // Firestore에 질문 추가
 
+	// 질문을 추가한 후, 질문을 표시합니다.
 	displayQuestion({id: questionRef.id, text: text}); // 질문 표시
 }
 
