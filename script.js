@@ -48,6 +48,7 @@ async function addQuestion(text) {
 function displayQuestion({id, text}) {
 	const questionDiv = document.createElement('div'); // 질문 div 생성
 	questionDiv.classList.add('question'); // 클래스 추가
+	questionDiv.dataset.id = id; // 질문 ID를 data-id 속성에 저장
 	questionDiv.innerHTML = `
         <p>${text}</p>
         <form class="answerForm">
@@ -81,13 +82,9 @@ async function addAnswer(questionId, text) {
 
 // 답변 표시 함수
 function displayAnswer(questionId, text) {
-	const questionDiv = [...questionList.children].find(div => div.querySelector('p').textContent === text);
-
-	// 질문 ID를 사용하여 정확한 질문을 찾도록 수정
-	const questionDivById = [...questionList.children].find(div => div.dataset.id === questionId);
-
-	if (questionDivById) {
-		const answersDiv = questionDivById.querySelector('.answers'); // 답변 리스트 선택
+	const questionDiv = [...questionList.children].find(div => div.dataset.id === questionId); // data-id로 질문 찾기
+	if (questionDiv) {
+		const answersDiv = questionDiv.querySelector('.answers'); // 답변 리스트 선택
 		const answerDiv = document.createElement('div'); // 답변 div 생성
 		answerDiv.classList.add('answer'); // 클래스 추가
 		answerDiv.textContent = text; // 답변 텍스트 추가
