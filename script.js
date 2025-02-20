@@ -51,11 +51,13 @@ function displayQuestion({id, text, answers = []}) {
 	questionDiv.dataset.id = id; // 질문 ID를 data-id 속성에 저장
 	questionDiv.innerHTML = `
         <p>${text}</p>
-        <button class="delete-button">삭제</button>
-        <form class="answerForm">
-            <input type="text" placeholder="답변을 입력하세요" required>
-            <button type="submit">답변하기</button>
-        </form>
+        <div class="question-controls">
+            <button class="delete-button">삭제</button>
+            <form class="answerForm">
+                <input type="text" placeholder="답변을 입력하세요" required>
+                <button type="submit">답변하기</button>
+            </form>
+        </div>
         <div class="answers"></div>
     `; // 질문 내용 및 답변 폼 추가
 
