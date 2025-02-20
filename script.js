@@ -19,8 +19,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 영어 질문 게시판 기능 구현
-
 // DOM 요소 선택
 const questionForm = document.getElementById('questionForm');
 const questionInput = document.getElementById('questionInput');
@@ -41,7 +39,6 @@ async function addQuestion(text) {
 		answers: []
 	}); // Firestore에 질문 추가
 
-	// 질문을 추가한 후, 질문을 표시합니다.
 	displayQuestion({id: questionRef.id, text: text}); // 질문 표시
 }
 
