@@ -45,9 +45,13 @@ async function addQuestion(text) {
 
 // 질문 표시 함수
 function displayQuestion({id, text, answers = []}) {
-	const questionDiv = document.createElement('div'); // 질문 div 생성
-	questionDiv.classList.add('question'); // 클래스 추가
-	questionDiv.dataset.id = id; // 질문 ID를 data-id 속성에 저장
+	console.log('질문 표시:', {id, text, answers}); // 디버깅 로그 추가
+
+	const questionDiv = document.createElement('div');
+	questionDiv.classList.add('question');
+	questionDiv.dataset.id = id; // ID 설정 확인
+
+	// 질문 구조 생성
 	questionDiv.innerHTML = `
         <p>${text}</p>
         <div class="question-controls">
@@ -58,28 +62,32 @@ function displayQuestion({id, text, answers = []}) {
             </form>
         </div>
         <div class="answers"></div>
-    `; // 질문 내용 및 답변 폼 추가
+    `;
 
-	// 삭제 버튼 이벤트 리스너
+	// 이벤트 리스너 설정
 	questionDiv.querySelector('.delete-button').addEventListener('click', async function () {
-		await deleteQuestion(id); // 질문 삭제 함수 호출
+		await deleteQuestion(id);
 	});
 
-	// 답변 제출 이벤트 리스너
 	questionDiv.querySelector('.answerForm').addEventListener('submit', async function (event) {
-		event.preventDefault(); // 기본 제출 동작 방지
-		const answerInput = event.target.querySelector('input'); // 답변 입력 필드
-		const answerText = answerInput.value; // 입력된 답변 텍스트
-		await addAnswer(id, answerText); // 답변 추가 함수 호출
-		answerInput.value = ''; // 입력 필드 초기화
+		event.preventDefault();
+		const answerInput = event.target.querySelector('input');
+		const answerText = answerInput.value;
+		await addAnswer(id, answerText);
+		answerInput.value = '';
 	});
 
-	// 기존 답변 표시
-	answers.forEach(answer => {
-		displayAnswer(id, answer); // 기존 답변 표시
-	});
+	// 질문을 목록에 추가
+	questionList.appendChild(questionDiv);
+	console.log('질문이 DOM에 추가됨:', questionDiv);
 
-	questionList.appendChild(questionDiv); // 질문 리스트에 질문 추가
+	// 기존 답변들을 표시
+	if (answers && answers.length > 0) {
+		console.log('기존 답변 표시 시작:', answers);
+		answers.forEach(answer => {
+			displayAnswer(id, answer);
+		});
+	}
 }
 
 // 답변 추가 함수
@@ -94,16 +102,60 @@ async function addAnswer(questionId, text) {
 
 // 답변 표시 함수
 function displayAnswer(questionId, text) {
-	console.log('답변을 추가할 질문 ID:', questionId); // 추가된 로그
-	const questionDiv = [...questionList.children].find(div => div.dataset.id === questionId); // data-id로 질문 찾기
+	// 디버깅을 위한 로그 추가
+	console.log('답변 표시 시도:', {questionId, text});
+	console.log('현재 질문 목록:', questionList.children);
+
+	// 질문 찾기 전에 questionList가 존재하는지 확인
+	if (!questionList) {
+		console.error('질문 목록을 찾을 수 없습니다.');
+		return;
+	}
+
+	// 모든 질문 요소를 배열로 변환하고 해당 ID를 가진 질문 찾기
+	const questions = Array.from(questionList.children);
+	console.log(
+		'질문 배열:',
+		questions.map(q => q.dataset.id)
+	);
+
+	const questionDiv = questions.find(div => {
+		console.log('비교:', div.dataset.id, questionId);
+		return div.dataset.id === questionId;
+	});
+
 	if (questionDiv) {
-		const answersDiv = questionDiv.querySelector('.answers'); // 답변 리스트 선택
-		const answerDiv = document.createElement('div'); // 답변 div 생성
-		answerDiv.classList.add('answer'); // 클래스 추가
-		answerDiv.textContent = text; // 답변 텍스트 추가
-		answersDiv.appendChild(answerDiv); // 답변 리스트에 답변 추가
+		// 답변을 표시할 영역 찾기
+		const answersDiv = questionDiv.querySelector('.answers');
+		if (!answersDiv) {
+			console.error('답변 영역을 찾을 수 없습니다.');
+			return;
+		}
+
+		// 새 답변 요소 생성 및 추가
+		try {
+			const answerDiv = document.createElement('div');
+			answerDiv.classList.add('answer');
+			answerDiv.textContent = text;
+			answersDiv.appendChild(answerDiv);
+			console.log('답변이 성공적으로 추가되었습니다.');
+		} catch (error) {
+			console.error('답변 추가 중 오류 발생:', error);
+		}
 	} else {
 		console.error('해당 ID의 질문을 찾을 수 없습니다:', questionId);
+		// 질문이 아직 로드되지 않았을 수 있으므로, 잠시 후 다시 시도
+		setTimeout(() => {
+			const retryQuestionDiv = [...questionList.children].find(div => div.dataset.id === questionId);
+			if (retryQuestionDiv) {
+				const answersDiv = retryQuestionDiv.querySelector('.answers');
+				const answerDiv = document.createElement('div');
+				answerDiv.classList.add('answer');
+				answerDiv.textContent = text;
+				answersDiv.appendChild(answerDiv);
+				console.log('재시도 후 답변이 추가되었습니다.');
+			}
+		}, 100);
 	}
 }
 
