@@ -90,7 +90,7 @@ function displayAnswer(questionId, text) {
 		answerDiv.textContent = text; // 답변 텍스트 추가
 		answersDiv.appendChild(answerDiv); // 답변 리스트에 답변 추가
 	} else {
-		console.error('Question not found for ID:', questionId);
+		console.error('해당 ID의 질문을 찾을 수 없습니다:', questionId); // 한글로 수정된 에러 메시지
 	}
 }
 
