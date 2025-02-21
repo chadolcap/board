@@ -2,8 +2,7 @@
 node_modules/
 package-lock.json
 
-# Build outputs
-dist/
+
 
 # IDE and editor files
 .vscode/
