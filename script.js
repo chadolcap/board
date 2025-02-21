@@ -1,28 +1,59 @@
 /** @format */
 
-// Firebase SDK 임포트
-import {initializeApp} from 'firebase/app';
-import {getFirestore, collection, addDoc, getDocs, updateDoc, arrayUnion, doc, deleteDoc} from 'firebase/firestore';
+// Firebase SDK를 동적으로 추가
+function loadFirebaseSDK() {
+	const scripts = ['https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js', 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js'];
 
-// Firebase 설정 객체
-const firebaseConfig = {
-	apiKey: 'AIzaSyAx-fA2fUlm06zyS3yMgl89_rAm7tssvUs',
-	authDomain: 'qna-board-d3c80.firebaseapp.com',
-	projectId: 'qna-board-d3c80',
-	storageBucket: 'qna-board-d3c80.firebasestorage.app',
-	messagingSenderId: '76118308944',
-	appId: '1:76118308944:web:8652f66fae8e3b77407955',
-	measurementId: 'G-70Z3P2YP8Y'
-};
+	return Promise.all(
+		scripts.map(url => {
+			return new Promise((resolve, reject) => {
+				const script = document.createElement('script');
+				script.src = url;
+				script.async = true;
+				script.onload = resolve;
+				script.onerror = reject;
+				document.head.appendChild(script);
+			});
+		})
+	);
+}
 
-// Firebase 초기화
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Firebase SDK 로드 후 초기화
+async function initializeFirebase() {
+	await loadFirebaseSDK();
+
+	const firebaseConfig = {
+		apiKey: 'AIzaSyAx-fA2fUlm06zyS3yMgl89_rAm7tssvUs',
+		authDomain: 'qna-board-d3c80.firebaseapp.com',
+		projectId: 'qna-board-d3c80',
+		storageBucket: 'qna-board-d3c80.firebasestorage.app',
+		messagingSenderId: '76118308944',
+		appId: '1:76118308944:web:8652f66fae8e3b77407955',
+		measurementId: 'G-70Z3P2YP8Y'
+	};
+
+	// Firebase 초기화
+	firebase.initializeApp(firebaseConfig);
+	return firebase.firestore();
+}
+
+// 전역 변수로 db 선언
+let db;
 
 // DOM 요소 선택
 const questionForm = document.getElementById('questionForm');
 const questionInput = document.getElementById('questionInput');
 const questionList = document.getElementById('questionList');
+
+// Firebase 초기화 및 앱 시작
+async function startApp() {
+	try {
+		db = await initializeFirebase();
+		await loadQuestions();
+	} catch (error) {
+		console.error('Firebase 초기화 중 오류 발생:', error);
+	}
+}
 
 // 질문 제출 이벤트 리스너
 questionForm.addEventListener('submit', async function (event) {
@@ -34,13 +65,12 @@ questionForm.addEventListener('submit', async function (event) {
 
 // 질문 추가 함수
 async function addQuestion(text) {
-	const questionRef = await addDoc(collection(db, 'questions'), {
+	const questionRef = await db.collection('questions').add({
 		text: text,
 		answers: []
-	}); // Firestore에 질문 추가
+	});
 
-	// 질문을 추가한 후, 질문을 표시합니다.
-	displayQuestion({id: questionRef.id, text: text}); // 질문 표시
+	displayQuestion({id: questionRef.id, text: text});
 }
 
 // 질문 표시 함수
@@ -96,12 +126,12 @@ function displayQuestion({id, text, answers = []}) {
 
 // 답변 추가 함수
 async function addAnswer(questionId, text) {
-	const questionRef = doc(db, 'questions', questionId);
-	await updateDoc(questionRef, {
-		answers: arrayUnion(text) // Firestore에 답변 추가
+	const questionRef = db.collection('questions').doc(questionId);
+	await questionRef.update({
+		answers: firebase.firestore.FieldValue.arrayUnion(text)
 	});
 
-	displayAnswer(questionId, text); // 답변 표시
+	displayAnswer(questionId, text);
 }
 
 // 답변 표시 함수
@@ -158,19 +188,17 @@ function displayAnswer(questionId, text) {
 
 // 질문 삭제 함수
 async function deleteQuestion(questionId) {
-	const questionRef = doc(db, 'questions', questionId);
-	await deleteDoc(questionRef); // Firestore에서 질문 삭제
+	await db.collection('questions').doc(questionId).delete();
 
 	const questionDiv = Array.from(questionList.children).find(div => div.dataset.id === questionId);
-
 	if (questionDiv) {
-		questionList.removeChild(questionDiv); // DOM에서 질문 삭제
+		questionList.removeChild(questionDiv);
 	}
 }
 
 // Firestore에서 질문 불러오기
 async function loadQuestions() {
-	const snapshot = await getDocs(collection(db, 'questions'));
+	const snapshot = await db.collection('questions').get();
 	snapshot.forEach(doc => {
 		const data = doc.data();
 		displayQuestion({
@@ -181,5 +209,5 @@ async function loadQuestions() {
 	});
 }
 
-// 페이지 로드 시 질문 불러오기
-loadQuestions();
+// 페이지 로드 시 앱 시작
+startApp();
